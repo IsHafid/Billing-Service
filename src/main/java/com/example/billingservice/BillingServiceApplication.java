@@ -13,6 +13,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.hateoas.PagedModel;
 
 import java.util.Date;
@@ -29,9 +30,10 @@ public class BillingServiceApplication {
     CommandLineRunner start(BillRepository billRepository,
                             ProductItemRepository productItemRepository,
                             CustomerRestClient customerRestClient,
-                            ProductItemRestClient productItemRestClient
-                            ){
+                            ProductItemRestClient productItemRestClient, RepositoryRestConfiguration restConfiguration
+    ){
         return args -> {
+            restConfiguration.exposeIdsFor(Bill.class);
             Customer customer=customerRestClient.getCustomerById(1L);
             Bill bill1= billRepository.save(new Bill(null, new Date(), null, customer.getId(), null));
             PagedModel<Product> productPagedModel= productItemRestClient.pageProducts();
@@ -44,6 +46,30 @@ public class BillingServiceApplication {
                 productItemRepository.save(productItem);
 
             });
+            Customer customer2=customerRestClient.getCustomerById(2L);
+            Bill bill2= billRepository.save(new Bill(null, new Date(), null, customer2.getId(), null));
+            productPagedModel.forEach(p -> {
+                ProductItem productItem=new ProductItem();
+                productItem.setPrice(p.getPrice());
+                productItem.setQuantity(1+ new Random().nextInt(100));
+                productItem.setProductID(p.getId());
+                productItem.setBill(bill2);
+                productItemRepository.save(productItem);
+
+            });
+            Customer customer3=customerRestClient.getCustomerById(3L);
+            Bill bill3= billRepository.save(new Bill(null, new Date(), null, customer3.getId(), null));
+            productPagedModel.forEach(p -> {
+                ProductItem productItem=new ProductItem();
+                productItem.setPrice(p.getPrice());
+                productItem.setQuantity(1+ new Random().nextInt(100));
+                productItem.setProductID(p.getId());
+                productItem.setBill(bill3);
+                productItemRepository.save(productItem);
+
+            });
+
+
         };
     }
 
